@@ -9,7 +9,16 @@ RoutingProtocolImpl::RoutingProtocolImpl(Node *n) : RoutingProtocol(n) {
   sys = n;
 }
 
-RoutingProtocolImpl::~RoutingProtocolImpl() {}
+RoutingProtocolImpl::~RoutingProtocolImpl() {
+  /* release memory of ports */
+  hash_map<unsigned short, Port*>::iterator iter = ports.begin();
+
+  while (iter != ports.end()) {
+    Port* port = iter->second;
+    ports.erase(iter++);
+    free(port);
+  }
+}
 
 void RoutingProtocolImpl::init(unsigned short num_ports, unsigned short router_id, eProtocolType protocol_type) {
   this->num_ports = num_ports;
@@ -22,7 +31,6 @@ void RoutingProtocolImpl::init(unsigned short num_ports, unsigned short router_i
 }
 
 void RoutingProtocolImpl::handle_alarm(void *data) {
-  cout << "port table: " << ports.size() << endl;
   char alarm_type = *(char*)data;
   switch (alarm_type) {
   case PING_ALARM:
@@ -105,9 +113,9 @@ void RoutingProtocolImpl::update_port_stat() {
 
   while (iter != ports.end()) {
     Port* port = iter->second;
-    cout << "ports size: " << ports.size() << endl;
     if (sys->time() > port->time_to_expire) {
       ports.erase(iter++);
+      free(port);
     } else {
       ++iter;
     }
@@ -126,6 +134,7 @@ void RoutingProtocolImpl::update_dv_stat() {
 void RoutingProtocolImpl::handle_data_packet() {
 
 }
+
 void RoutingProtocolImpl::handle_ping_packet(unsigned short port_id, void* packet, unsigned short size) {
   unsigned short dest_id = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 4));
 
@@ -147,11 +156,11 @@ void RoutingProtocolImpl::handle_pong_packet(unsigned short port_id, void* packe
   unsigned int timestamp = (unsigned int)ntohl(*(unsigned int*)((char*)packet + 8));
   unsigned short neighbor_id = (unsigned short)ntohl(*(unsigned short*)((char*)packet + 4));
 
-  Port port;
-  port.cost = sys->time() - timestamp;
-  port.time_to_expire = sys->time() + PONG_TIMEOUT;
-  port.neighbor_id = neighbor_id;
-  ports[port_id] = &port;
+  Port* port = (Port*)malloc(sizeof(Port));
+  port->cost = sys->time() - timestamp;
+  port->time_to_expire = sys->time() + PONG_TIMEOUT;
+  port->neighbor_id = neighbor_id;
+  ports[port_id] = port;
 
   free(packet);
 }
