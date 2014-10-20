@@ -4,21 +4,26 @@
 #include "RoutingProtocol.h"
 
 struct Port {
-  unsigned int cost;
+  unsigned short cost;
   unsigned int time_to_expire;
   unsigned short neighbor_id;
 };
 
 struct Forwarding_Table_Entry {
-
-};
-
-struct LS_Entry {
+  unsigned short dest_id;
   unsigned short next_hop;
 };
 
-struct DV_Entry {
+struct LS_Entry {
+  unsigned int time_to_expire;
+  unsigned short neighbor_id;
+  unsigned short cost;
+};
 
+struct DV_Entry {
+  unsigned int cost;
+  unsigned int time_to_expire;
+  unsigned short next_hop;
 };
 
 class RoutingProtocolImpl : public RoutingProtocol {
@@ -55,27 +60,49 @@ class RoutingProtocolImpl : public RoutingProtocol {
 
  private:
 
-    /* packet type */
-    static const char PING_PACKET = 1;
-    static const char PONG_PACKET = 2;
-    static const char DATA_PACKET = 3;
-    static const char LS_PACKET = 4;
-    static const char DV_PACKET = 5;
-
     /* alarm type */
     static const char PING_ALARM;
+    static const char LS_ALARM;
+    static const char DV_ALARM;
     static const char CHECK_ALARM;
-
-    static const unsigned short DATA_PORT = 0xffff;
 
     /* PING messages are generated every 10 seconds */
     static const unsigned int PING_DURATION = 10000;
-    /* 1-second check */
-    static const unsigned int CHECK_DURATION = 1000;
     static const unsigned int PONG_TIMEOUT = 15000;
 
+    /* LS updates every 30 seconds */
+    static const unsigned int LS_DURATION = 30000;
+    static const unsigned int LS_TIMEOUT = 45000;
+
+    /* DV updates every 30 secondes */
+    static const unsigned int DV_DURATION = 30000;
+    static const unsigned int DV_TIMEOUT = 45000;
+
+    /* 1-second check */
+    static const unsigned int CHECK_DURATION = 1000;
+
+    /* port ID and Port */
+    hash_map<unsigned short, Port*> ports;
+    /* router ID and neighbor LS_Entry */
+    //hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
+    unsigned int sequence_num;
+    /* router ID and DV_Entry */
+    hash_map<unsigned short, DV_Entry*> dv_table;
+    /* destination id and forwarding_table_entry */
+    hash_map<unsigned short, Forwarding_Table_Entry*> forwarding_table;
+    /* router id and neighbor ls_entry */
+    hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
+
+    Node *sys; // To store Node object; used to access GSR9999 interfaces
+    unsigned short num_ports;
+    unsigned short router_id;
+    eProtocolType protocol_type;
+
     void handle_ping_alarm();
+    void handle_ls_alarm();
+    void handle_dv_alarm();
     void handle_check_alarm();
+
 
     void handle_data_packet();
     void handle_ping_packet(unsigned short port_id, void* packet, unsigned short size);
@@ -89,13 +116,6 @@ class RoutingProtocolImpl : public RoutingProtocol {
     void update_port_stat();
     void update_ls_stat();
     void update_dv_stat();
-
-    Node *sys; // To store Node object; used to access GSR9999 interfaces
-    unsigned short num_ports;
-    unsigned short router_id;
-    eProtocolType protocol_type;
-
-    hash_map<unsigned short, Port*> ports;
 };
 
 #endif
