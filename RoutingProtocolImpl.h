@@ -2,28 +2,17 @@
 #define ROUTINGPROTOCOLIMPL_H
 
 #include "RoutingProtocol.h"
+#include "DVTable.h"
 
 struct Port {
-  unsigned short cost;
   unsigned int time_to_expire;
   unsigned short neighbor_id;
-};
-
-struct Forwarding_Table_Entry {
-  unsigned short dest_id;
-  unsigned short next_hop;
 };
 
 struct LS_Entry {
   unsigned int time_to_expire;
   unsigned short neighbor_id;
   unsigned short cost;
-};
-
-struct DV_Entry {
-  unsigned int cost;
-  unsigned int time_to_expire;
-  unsigned short next_hop;
 };
 
 class RoutingProtocolImpl : public RoutingProtocol {
@@ -76,22 +65,19 @@ class RoutingProtocolImpl : public RoutingProtocol {
 
     /* DV updates every 30 secondes */
     static const unsigned int DV_DURATION = 30000;
-    static const unsigned int DV_TIMEOUT = 45000;
 
     /* 1-second check */
     static const unsigned int CHECK_DURATION = 1000;
 
     /* port ID and Port */
     hash_map<unsigned short, Port*> ports;
-    /* router ID and neighbor LS_Entry */
-    //hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
     unsigned int sequence_num;
-    /* router ID and DV_Entry */
-    hash_map<unsigned short, DV_Entry*> dv_table;
-    /* destination id and forwarding_table_entry */
-    hash_map<unsigned short, Forwarding_Table_Entry*> forwarding_table;
-    /* router id and neighbor ls_entry */
-    hash_map<unsigned short, vector<LS_Entry*>*> ls_table;
+
+    /* destination ID and next_hop */
+    hash_map<unsigned short, unsigned short> routing_table;
+    DVTable dv_table;
+
+
 
     Node *sys; // To store Node object; used to access GSR9999 interfaces
     unsigned short num_ports;
@@ -103,19 +89,22 @@ class RoutingProtocolImpl : public RoutingProtocol {
     void handle_dv_alarm();
     void handle_check_alarm();
 
+    bool check_port_state();
+    bool check_ls_state();
+    bool check_dv_state();
 
-    void handle_data_packet();
-    void handle_ping_packet(unsigned short port_id, void* packet, unsigned short size);
-    void handle_pong_packet(unsigned short port_id, void* packet);
-    void handle_ls_packet();
-    void handle_dv_packet();
+    void recv_data_packet();
+    void recv_ping_packet(unsigned short port_id, char* packet, unsigned short size);
+    void recv_pong_packet(unsigned short port_id, char* packet);
+    void recv_ls_packet();
+    void recv_dv_packet(char* packet, unsigned short size);
 
-    bool check_packet_size(void* packet, unsigned short size);
-    bool check_dest_id(void* packet);
+    bool check_packet_size(char* packet, unsigned short size);
+    bool check_dst_id(char* packet);
 
-    void update_port_stat();
-    void update_ls_stat();
-    void update_dv_stat();
+    void send_dv_packet();
+    void send_ls_packet();
+
 };
 
 #endif
