@@ -148,3 +148,17 @@ bool DVTable::check_dv_state(unsigned int current_time, hash_map<unsigned short,
 
   return update;
 }
+
+void DVTable::print_dv(unsigned short router_id, hash_map<unsigned short, unsigned short>& routing_table) {
+  cout << "*********************************" << endl;
+  cout << "Router ID: " << router_id << endl;
+  cout << "*********************************" << endl;
+  cout << "Destination ID\tcost\tnext hop" << endl;
+  cout << "*********************************" << endl;
+
+  for (hash_map<unsigned short, DV_Entry*>::iterator iter = table.begin(); iter != table.end(); ++iter) {
+    cout << iter->first << "\t" << iter->second->cost << "\t" << routing_table[iter->first] << endl;
+  }
+
+  cout << "*********************************" << endl;
+}

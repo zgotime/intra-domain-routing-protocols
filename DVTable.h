@@ -20,6 +20,7 @@ public:
   bool update_by_dv(const char* packet, unsigned short size, unsigned short id, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table);
   void delete_dv(vector<unsigned short>& deleted_dst_ids, hash_map<unsigned short, unsigned short>& routing_table);
   bool check_dv_state(unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table);
+  void print_dv(unsigned short router_id, hash_map<unsigned short, unsigned short>& routing_table);
 
 private:
 
