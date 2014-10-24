@@ -6,7 +6,7 @@
 
 struct Port {
   unsigned int time_to_expire;
-  unsigned short neighbor_id;
+  unsigned short port_id;
 };
 
 struct LS_Entry {
@@ -69,7 +69,7 @@ class RoutingProtocolImpl : public RoutingProtocol {
     /* 1-second check */
     static const unsigned int CHECK_DURATION = 1000;
 
-    /* port ID and Port */
+    /* neighbor ID and Port */
     hash_map<unsigned short, Port*> ports;
     unsigned int sequence_num;
 
@@ -93,7 +93,7 @@ class RoutingProtocolImpl : public RoutingProtocol {
     bool check_ls_state();
     bool check_dv_state();
 
-    void recv_data_packet();
+    void recv_data_packet(char* packet, unsigned short size);
     void recv_ping_packet(unsigned short port_id, char* packet, unsigned short size);
     void recv_pong_packet(unsigned short port_id, char* packet);
     void recv_ls_packet();

@@ -32,7 +32,7 @@ void DVTable::set_dv_packet(char* packet, unsigned short src_id, unsigned short 
   }
 }
 
-bool DVTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigned short current_time, hash_map<unsigned short, unsigned short>& routing_table) {
+bool DVTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table) {
   bool update = false;
   hash_map<unsigned short, DV_Entry*>::iterator iter = table.find(src_id);
 
@@ -62,7 +62,7 @@ bool DVTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigne
   return update;
 }
 
-bool DVTable::update_by_dv(const char* packet, unsigned short size, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table) {
+bool DVTable::update_by_dv(const char* packet, unsigned short size, unsigned short id, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table) {
   bool update = false;
   unsigned short src_id = (unsigned short)ntohs(*(unsigned short*)(packet + 4));
   unsigned int count = (size - 8) >> 2;
@@ -71,6 +71,10 @@ bool DVTable::update_by_dv(const char* packet, unsigned short size, unsigned int
     unsigned int offset = 8 + (i << 2);
     unsigned short dst_id = (unsigned short)ntohs(*(unsigned short*)(packet + offset));
     unsigned short cost = (unsigned short)ntohs(*(unsigned short*)(packet + offset + 2));
+
+    if (dst_id == id) {
+      continue;
+    }
 
     hash_map<unsigned short, DV_Entry*>::iterator iter = table.find(dst_id);
 
