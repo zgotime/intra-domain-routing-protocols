@@ -14,15 +14,18 @@ public:
   DVTable() {}
   ~DVTable();
 
+  void init(unsigned short router_id);
   unsigned short dv_length() const { return table.size(); }
-  void set_dv_packet(char* packet, unsigned short src_id, unsigned short dst_id, hash_map<unsigned short, unsigned short>& routing_table);
+  void set_dv_packet(char* packet, unsigned short dst_id, hash_map<unsigned short, unsigned short>& routing_table);
   bool update_by_pong(unsigned short src_id, unsigned short cost, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table);
-  bool update_by_dv(const char* packet, unsigned short size, unsigned short id, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table);
+  bool update_by_dv(const char* packet, unsigned short size, unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table);
   void delete_dv(vector<unsigned short>& deleted_dst_ids, hash_map<unsigned short, unsigned short>& routing_table);
   bool check_dv_state(unsigned int current_time, hash_map<unsigned short, unsigned short>& routing_table);
-  void print_dv(unsigned short router_id, hash_map<unsigned short, unsigned short>& routing_table);
+  void print_dv(hash_map<unsigned short, unsigned short>& routing_table);
 
 private:
+
+  unsigned short router_id;
 
   static const unsigned int DV_TIMEOUT = 45000;
 

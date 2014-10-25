@@ -29,13 +29,14 @@ void RoutingProtocolImpl::init(unsigned short num_ports, unsigned short router_i
   this->protocol_type = protocol_type;
 
   /* first ping message sent at 0 second */
-  sys->set_alarm(this, 0, (void*)&PING_ALARM);
+  handle_ping_alarm();
   sys->set_alarm(this, CHECK_DURATION, (void*)&CHECK_ALARM);
 
   if (protocol_type == P_LS) {
     sequence_num = 0;
     sys->set_alarm(this, LS_DURATION, (void*)&LS_ALARM);
   } else {
+    dv_table.init(router_id);
     sys->set_alarm(this, DV_DURATION, (void*)&DV_ALARM);
   }
 }
@@ -189,7 +190,7 @@ void RoutingProtocolImpl::recv_data_packet(char* packet, unsigned short size) {
 }
 
 void RoutingProtocolImpl::recv_ping_packet(unsigned short port_id, char* packet, unsigned short size) {
-  unsigned short dest_id = (unsigned short)ntohs(*(unsigned short*)((char*)packet + 4));
+  unsigned short dest_id = (unsigned short)ntohs(*(unsigned short*)(packet + 4));
 
   *packet = (char)PONG;
   *(unsigned short*)(packet + 4) = (unsigned short)htons(router_id);
@@ -212,7 +213,7 @@ void RoutingProtocolImpl::recv_pong_packet(unsigned short port_id, char* packet)
   unsigned int time_to_expire = sys->time() + PONG_TIMEOUT;
   free(packet);
 
-  hash_map<unsigned short, Port*>::iterator iter = ports.find(port_id);
+  hash_map<unsigned short, Port*>::iterator iter = ports.find(src_id);
 
   if (iter != ports.end()) {
     Port* port = iter->second;
@@ -245,7 +246,7 @@ void RoutingProtocolImpl::recv_dv_packet(char* packet, unsigned short size) {
     return;
   }
 
-  if (dv_table.update_by_dv(packet, size, router_id, sys->time(), routing_table)) {
+  if (dv_table.update_by_dv(packet, size, sys->time(), routing_table)) {
     send_dv_packet();
   }
 
@@ -273,10 +274,10 @@ void RoutingProtocolImpl::send_dv_packet() {
   for (hash_map<unsigned short, Port*>::iterator iter = ports.begin(); iter != ports.end(); ++iter) {
     char* packet = (char*)malloc(packet_size);
     Port* port = iter->second;
-    dv_table.set_dv_packet(packet, router_id, iter->first, routing_table);
+    dv_table.set_dv_packet(packet, iter->first, routing_table);
 
     sys->send(port->port_id, packet, packet_size);
   }
 
-  dv_table.print_dv(router_id, routing_table);
+  dv_table.print_dv(routing_table);
 }
