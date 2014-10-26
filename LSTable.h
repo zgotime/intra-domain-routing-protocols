@@ -30,6 +30,7 @@ public:
   bool update_by_pong(unsigned short src_id, unsigned short cost, unsigned short current_time);
   void increase_seq() { ++sequence_num; }
   void delete_neighbor(unsigned short neighbor_id);
+  void print_routing_table(hash_map<unsigned short, unsigned short>& routing_table);
 
 private:
 

@@ -126,8 +126,8 @@ void RoutingProtocolImpl::handle_check_alarm() {
     bool ls_update = ls_table.check_ls_state(sys->time());
 
     if (port_update || ls_update) {
-      send_ls_packet();
       ls_table.dijkstra(routing_table);
+      send_ls_packet();
     }
   } else {
     bool dv_update = dv_table.check_dv_state(sys->time(), routing_table);
@@ -229,9 +229,9 @@ void RoutingProtocolImpl::recv_pong_packet(unsigned short port_id, char* packet)
   }
 
   if (protocol_type == P_LS) {
-    if(ls_table.update_by_pong(router_id, cost, sys->time())){
-      send_ls_packet();
+    if(ls_table.update_by_pong(src_id, cost, sys->time())){
       ls_table.dijkstra(routing_table);
+      send_ls_packet();
     }
   } else {
     if (dv_table.update_by_pong(src_id, cost, sys->time(), routing_table)) {
@@ -295,6 +295,7 @@ void RoutingProtocolImpl::send_ls_packet() {
   }
 
   ls_table.increase_seq();
+  ls_table.print_routing_table(routing_table);
 }
 
 void RoutingProtocolImpl::send_dv_packet() {
