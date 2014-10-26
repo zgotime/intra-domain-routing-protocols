@@ -43,7 +43,7 @@ private:
   unsigned int sequence_num;
   unsigned short router_id;
 
-  LS_Entry* check_linkst_constains(unsigned short src_id);
+  LS_Entry* check_linkst_contains(unsigned short src_id);
 };
 
 #endif

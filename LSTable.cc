@@ -73,23 +73,40 @@ bool LSTable::check_ls_state(unsigned int current_time){
 
 void LSTable::update_by_ls(char* packet, unsigned int current_time, unsigned short size){
   unsigned short source_id = (unsigned short)ntohs(*(unsigned short*)(packet + 4));
-  unsigned short pointor = 12;
+  unsigned int count = (size - 12) >> 2;
   vector<LS_Entry*>* ls_vec = (vector<LS_Entry*>*)malloc(sizeof(vector<LS_Entry*>));
 
-  while (pointor < size){
-    unsigned short neighbor_id = (unsigned short)ntohs(*(unsigned short*)(packet + pointor));
-    unsigned short cost = (unsigned short)ntohs(*(unsigned short*)(packet + pointor + 2));
+  for (unsigned int i = 0; i < count; ++i) {
+    unsigned int offset = 12 + (i << 2);
+    unsigned short neighbor_id = (unsigned short)ntohs(*(unsigned short*)(packet + offset));
+    unsigned short cost = (unsigned short)ntohs(*(unsigned short*)(packet + offset + 2));
+
+    if (neighbor_id == router_id) {
+      continue;
+    }
 
     LS_Entry* entry=(LS_Entry*)malloc(sizeof(LS_Entry));
-    entry->neighbor_id=neighbor_id;
-    entry->cost=cost;
+    entry->neighbor_id = neighbor_id;
+    entry->cost = cost;
 
     ls_vec->push_back(entry);
-    pointor += 4;
   }
 
+  cout << "*****************************" << endl;
+  cout << "Router ID: " << router_id << "received link state: "<< endl;
+  cout << "*****************************" << endl;
+  cout << "Destination ID\tnext hop" << endl;
+  cout << "*****************************" << endl;
+  cout << "ls_vec empty: " << ls_vec->empty() << endl;
+  cout << "ls vec size: " << ls_vec->size() << endl;
+  for (vector<LS_Entry*>::iterator iter = ls_vec->begin(); iter != ls_vec->end(); ++iter) {
+    cout << (*iter)->neighbor_id << "\t" << (*iter)->cost << endl;
+  }
+
+  cout << "*****************************" << endl;
+
   /* update time_to_expire */
-  LS_Entry* neighbor_entry = check_linkst_constains(source_id);
+  LS_Entry* neighbor_entry = check_linkst_contains(source_id);
 
   if (neighbor_entry != NULL) {
     neighbor_entry->time_to_expire = current_time + LS_TIMEOUT;
@@ -97,6 +114,7 @@ void LSTable::update_by_ls(char* packet, unsigned int current_time, unsigned sho
 
   hash_map<unsigned short, vector<LS_Entry*>*>::iterator it = table.find(source_id);
 
+  /* replace link state */
   if (it != table.end()) {
     //free mem;
     vector<LS_Entry*>* vec = it->second;
@@ -136,7 +154,7 @@ void LSTable::dijkstra(hash_map<unsigned short, unsigned short>& routing_table){
   routing_table.clear();
 
   for (vector<LS_Entry*>::iterator it = linkst.begin(); it != linkst.end(); it++) {
-    LS_Info *lin = (struct LS_Info*)malloc(sizeof(LS_Info));
+    LS_Info *lin = (LS_Info*)malloc(sizeof(LS_Info));
     lin->cost = (*it)->cost;
     lin->next_hop = (*it)->neighbor_id;
     tentative[(*it)->neighbor_id] = lin;
@@ -169,7 +187,9 @@ void LSTable::dijkstra(hash_map<unsigned short, unsigned short>& routing_table){
     hash_map<unsigned short, vector<LS_Entry*>*>::iterator iter = table.find(dest);
 
     if (iter != table.end()) {
-      for (vector<LS_Entry*>::iterator it = iter->second->begin(); it != iter->second->end(); ++it){
+      vector<LS_Entry*>* vec = iter->second;
+
+      for (vector<LS_Entry*>::iterator it = vec->begin(); it != vec->end(); ++it){
         LS_Entry* entry = *it;
         unsigned short cost_thru_next = cost + entry->cost;
         hash_map<unsigned short, LS_Info*>::iterator tentative_iter = tentative.find(entry->neighbor_id);
@@ -215,7 +235,7 @@ void LSTable::set_ls_packet(char* packet, unsigned short packet_size){
 
 bool LSTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigned short current_time){
   bool update = false;
-  LS_Entry* entry = check_linkst_constains(src_id);
+  LS_Entry* entry = check_linkst_contains(src_id);
 
   if (entry != NULL) {
     entry->time_to_expire = current_time + LS_TIMEOUT;
@@ -223,7 +243,6 @@ bool LSTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigne
     if (cost != entry->cost) {
       update = true;
       entry->cost = cost;
-
     }
   } else {
     update = true;
@@ -237,7 +256,7 @@ bool LSTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigne
   return update;
 }
 
-LS_Entry* LSTable::check_linkst_constains(unsigned short src_id) {
+LS_Entry* LSTable::check_linkst_contains(unsigned short src_id) {
   for (vector<LS_Entry*>::iterator iter = linkst.begin(); iter != linkst.end(); ++iter) {
     LS_Entry* entry = *iter;
 
