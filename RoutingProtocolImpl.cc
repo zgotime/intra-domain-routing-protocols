@@ -1,5 +1,6 @@
 #include "RoutingProtocolImpl.h"
 #include <arpa/inet.h>
+#include <cstring>
 #include "Node.h"
 #include "DVTable.h"
 
@@ -33,7 +34,7 @@ void RoutingProtocolImpl::init(unsigned short num_ports, unsigned short router_i
   sys->set_alarm(this, CHECK_DURATION, (void*)&CHECK_ALARM);
 
   if (protocol_type == P_LS) {
-    sequence_num = 0;
+    ls_table.init(router_id);
     sys->set_alarm(this, LS_DURATION, (void*)&LS_ALARM);
   } else {
     dv_table.init(router_id);
@@ -81,7 +82,7 @@ void RoutingProtocolImpl::recv(unsigned short port, void *packet, unsigned short
     recv_pong_packet(port, (char*)packet);
     break;
   case LS:
-    recv_ls_packet();
+    recv_ls_packet(port, (char*)packet, size);
     break;
   case DV:
     recv_dv_packet((char*)packet, size);
@@ -122,10 +123,13 @@ void RoutingProtocolImpl::handle_check_alarm() {
   bool port_update = check_port_state();
 
   if (protocol_type == P_LS) {
-    bool ls_upate = false; // to do!
+    //check ls_table entries, delete the expired ones!!!!!!!!
+    ls_table.compute_ls_routing_table(routing_table);
 
-    if (port_update || ls_upate) {
-
+    if (port_update) {
+      // if port_update -- flood ports info to all nodes and re compute routing table
+      send_ls_packet();
+      ls_table.compute_ls_routing_table(routing_table);
     }
   } else {
     bool dv_update = dv_table.check_dv_state(sys->time(), routing_table);
@@ -157,7 +161,7 @@ bool RoutingProtocolImpl::check_port_state() {
 
   if (update) {
     if (protocol_type == P_LS) {
-
+      ls_table.delete_ls(sys->time());
     } else {
       dv_table.delete_dv(deleted_dst_ids, routing_table);
     }
@@ -226,7 +230,11 @@ void RoutingProtocolImpl::recv_pong_packet(unsigned short port_id, char* packet)
   }
 
   if (protocol_type == P_LS) {
+    if(ls_table.update_by_pong(router_id, cost, sys->time())){
+      send_ls_packet();
+    }
 
+    ls_table.compute_ls_routing_table(routing_table);
   } else {
     if (dv_table.update_by_pong(src_id, cost, sys->time(), routing_table)) {
       send_dv_packet();
@@ -234,8 +242,19 @@ void RoutingProtocolImpl::recv_pong_packet(unsigned short port_id, char* packet)
   }
 }
 
-void RoutingProtocolImpl::recv_ls_packet() {
+void RoutingProtocolImpl::recv_ls_packet(unsigned short port_id, char* packet, unsigned short size) {
+  ls_table.update_ls_package(port_id, packet, size);
 
+  for (hash_map<unsigned short, Port*>::iterator iter_j = ports.begin(); iter_j != ports.end(); ++iter_j) {
+    if (port_id != iter_j->second->port_id){
+      char* packet_f = (char*)malloc(size);
+      memcpy(packet_f, packet, size);
+      sys->send(iter_j->second->port_id, packet_f, size);
+    }
+  }
+
+  free(packet);
+  ls_table.compute_ls_routing_table(routing_table);
 }
 
 void RoutingProtocolImpl::recv_dv_packet(char* packet, unsigned short size) {
@@ -265,7 +284,16 @@ bool RoutingProtocolImpl::check_dst_id(char* packet) {
 
 
 void RoutingProtocolImpl::send_ls_packet() {
+  unsigned short packet_size = 12 + (ports.size()<<2);
 
+  /* flood */
+  for (hash_map<unsigned short, Port*>::iterator iter_i = ports.begin(); iter_i != ports.end(); ++iter_i) {
+    char* packet = (char*)malloc(packet_size);
+    ls_table.set_ls_package(packet, packet_size);
+    sys->send(iter_i->second->port_id, packet, packet_size);
+  }
+
+  ls_table.increase_seq();
 }
 
 void RoutingProtocolImpl::send_dv_packet() {

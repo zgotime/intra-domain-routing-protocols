@@ -116,12 +116,13 @@ bool DVTable::update_by_dv(const char* packet, unsigned short size, unsigned int
 
     /* if there is a DV entry in DV table */
     if (iter != table.end()) {
+      DV_Entry* entry = iter->second;
+      unsigned short old_cost = entry->cost;
       iter = table.find(src_id);
 
       /* if there is a path to this neighbor in DV table */
       /* in most cases, src id should exists in routing table */
       if (iter != table.end()) {
-        DV_Entry* entry = iter->second;
         entry->time_to_expire = current_time + DV_TIMEOUT;
 
         /* poison reverse */
@@ -129,7 +130,7 @@ bool DVTable::update_by_dv(const char* packet, unsigned short size, unsigned int
           cost += table[src_id]->cost;
         }
 
-        if (cost < entry->cost) {
+        if (cost < old_cost) {
           update = true;
           entry-> cost = cost;
           routing_table[dst_id] = src_id;

@@ -3,16 +3,11 @@
 
 #include "RoutingProtocol.h"
 #include "DVTable.h"
+#include "LSTable.h"
 
 struct Port {
   unsigned int time_to_expire;
   unsigned short port_id;
-};
-
-struct LS_Entry {
-  unsigned int time_to_expire;
-  unsigned short neighbor_id;
-  unsigned short cost;
 };
 
 class RoutingProtocolImpl : public RoutingProtocol {
@@ -61,7 +56,6 @@ class RoutingProtocolImpl : public RoutingProtocol {
 
     /* LS updates every 30 seconds */
     static const unsigned int LS_DURATION = 30000;
-    static const unsigned int LS_TIMEOUT = 45000;
 
     /* DV updates every 30 secondes */
     static const unsigned int DV_DURATION = 30000;
@@ -71,13 +65,11 @@ class RoutingProtocolImpl : public RoutingProtocol {
 
     /* neighbor ID and Port */
     hash_map<unsigned short, Port*> ports;
-    unsigned int sequence_num;
 
     /* destination ID and next_hop */
     hash_map<unsigned short, unsigned short> routing_table;
     DVTable dv_table;
-
-
+    LSTable ls_table;
 
     Node *sys; // To store Node object; used to access GSR9999 interfaces
     unsigned short num_ports;
@@ -96,7 +88,7 @@ class RoutingProtocolImpl : public RoutingProtocol {
     void recv_data_packet(char* packet, unsigned short size);
     void recv_ping_packet(unsigned short port_id, char* packet, unsigned short size);
     void recv_pong_packet(unsigned short port_id, char* packet);
-    void recv_ls_packet();
+    void recv_ls_packet(unsigned short port_id, char* packet, unsigned short size);
     void recv_dv_packet(char* packet, unsigned short size);
 
     bool check_packet_size(char* packet, unsigned short size);
@@ -104,7 +96,6 @@ class RoutingProtocolImpl : public RoutingProtocol {
 
     void send_dv_packet();
     void send_ls_packet();
-
 };
 
 #endif
