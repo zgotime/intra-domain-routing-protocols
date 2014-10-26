@@ -10,42 +10,39 @@ struct LS_Entry {
 };
 
 struct LS_Info{
-  unsigned short destinatin_id;
   unsigned short cost;
-  unsigned short next_hop_id;
+  unsigned short next_hop;
 };
 
 
 class LSTable{
 
 public:
-  LSTable();
+  LSTable() {}
   ~LSTable();
   void init(unsigned short router_id);
-  void insert(unsigned short router_id, vector<LS_Entry*>* vec);
-
-  hash_map<unsigned short, vector<LS_Entry*>*>::iterator find(unsigned short router_id);
-  void delete_ls(unsigned int current_time);
-  void update_ls_package(unsigned short port_id, char* packet, unsigned short size);
+  void delete_ls(vector<unsigned short>& deleted_dst_ids);
+  bool check_ls_state(unsigned int current_time);
   bool check_lsp_sequence_num(char* packet);
-
-  void compute_ls_routing_table(hash_map<unsigned short, unsigned short>& routing_table);
-
-  void set_ls_package(char* packet, unsigned short packet_size);
-
-  void increase_seq();
+  void update_by_ls(char* packet, unsigned int current_time, unsigned short size);
+  void dijkstra(hash_map<unsigned short, unsigned short>& routing_table);
+  void set_ls_packet(char* packet, unsigned short packet_size);
   bool update_by_pong(unsigned short src_id, unsigned short cost, unsigned short current_time);
+  void increase_seq() { ++sequence_num; }
+  void delete_neighbor(unsigned short neighbor_id);
 
 private:
 
   static const unsigned int LS_TIMEOUT = 45000;
 
   hash_map<unsigned short, vector<LS_Entry*>*> table;
-  vector<LS_Entry*> linkst;
   hash_map<unsigned short, unsigned int> ls_sequence_num;
+
+  vector<LS_Entry*> linkst;
   unsigned int sequence_num;
   unsigned short router_id;
 
+  LS_Entry* check_linkst_constains(unsigned short src_id);
 };
 
 #endif

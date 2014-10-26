@@ -8,7 +8,8 @@ OBJS =\
 	Node.o\
 	RoutingProtocolImpl.o\
 	Simulator.o\
-	DVTable.o
+	DVTable.o\
+	LSTable.o
 
 HEADRES =\
 	global.h\
@@ -17,7 +18,8 @@ HEADRES =\
 	Node.h\
 	RoutingProtocol.h\
 	Simulator.h\
-	DVTable.h
+	DVTable.h\
+	LSTable.h
 
 %.o: %.cc
 	$(CC) $(COPTS) -c $< -o $@
@@ -32,9 +34,9 @@ Event.o: Event.h Link.h Node.h Simulator.h
 Link.o: Event.h Link.h Node.h Simulator.h
 Node.o: Event.h Link.h Node.h Simulator.h
 Simulator.o: Event.h Link.h Node.h RoutingProtocol.h Simulator.h 
-RoutingProtocolImpl.o: RoutingProtocolImpl.h DVTable.h
+RoutingProtocolImpl.o: RoutingProtocolImpl.h DVTable.h LSTable.h
 DVTable.o: DVTable.h
+LSTable.o: LSTable.h
 
 clean:
 	rm -f *.o Simulator
-
