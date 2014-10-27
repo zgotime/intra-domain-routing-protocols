@@ -202,7 +202,7 @@ void LSTable::dijkstra(hash_map<unsigned short, unsigned short>& routing_table){
 
           if (cost_thru_next < ls_info->cost) {
             ls_info->cost = cost_thru_next;
-            ls_info->next_hop = dest;
+            ls_info->next_hop = next;
           }
         } else {
           hash_map<unsigned short, unsigned short>::iterator route_iter = routing_table.find(entry->neighbor_id);
@@ -210,7 +210,7 @@ void LSTable::dijkstra(hash_map<unsigned short, unsigned short>& routing_table){
           if (route_iter == routing_table.end() && router_id != entry->neighbor_id) {
             LS_Info* temp = (LS_Info*)malloc(sizeof(LS_Info));
             temp->cost = cost_thru_next;
-            temp->next_hop = dest;
+            temp->next_hop = next;
             tentative[entry->neighbor_id] = temp;
           }
         }
