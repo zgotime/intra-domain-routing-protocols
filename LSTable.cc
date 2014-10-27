@@ -44,10 +44,12 @@ void LSTable::delete_ls(vector<unsigned short>& deleted_dst_ids) {
 
       if (entry->neighbor_id == *iter) {
         delete_neighbor(entry->neighbor_id);
-        linkst.erase(ls_iter);
+        ls_iter = linkst.erase(ls_iter);
         free(entry);
 
         break;
+      } else {
+        ++ls_iter;
       }
     }
   }
@@ -94,7 +96,7 @@ void LSTable::update_by_ls(char* packet, unsigned int current_time, unsigned sho
   }
 
   cout << "*****************************" << endl;
-  cout << "Router ID: " << router_id << "received link state: "<< endl;
+  cout << "Router ID: " << router_id << "received link state from Router " << source_id << ": "<< endl;
   cout << "*****************************" << endl;
   cout << "Destination ID\tnext hop" << endl;
   cout << "*****************************" << endl;
