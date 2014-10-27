@@ -25,7 +25,8 @@ LSTable::~LSTable(){
       vec_iter = vec->erase(vec_iter);
       free(entry);
     }
-    free(vec);
+
+    delete vec;
   }
 }
 
@@ -74,7 +75,7 @@ bool LSTable::check_ls_state(unsigned int current_time){
 void LSTable::update_by_ls(char* packet, unsigned int current_time, unsigned short size){
   unsigned short source_id = (unsigned short)ntohs(*(unsigned short*)(packet + 4));
   unsigned int count = (size - 12) >> 2;
-  vector<LS_Entry*>* ls_vec = (vector<LS_Entry*>*)malloc(sizeof(vector<LS_Entry*>));
+  vector<LS_Entry*>* ls_vec = new vector<LS_Entry*>;
 
   for (unsigned int i = 0; i < count; ++i) {
     unsigned int offset = 12 + (i << 2);
@@ -126,7 +127,7 @@ void LSTable::update_by_ls(char* packet, unsigned int current_time, unsigned sho
       free(entry);
     }
 
-    free(vec);
+    delete vec;
   }
 
   table[source_id]=ls_vec;
@@ -233,7 +234,7 @@ void LSTable::set_ls_packet(char* packet, unsigned short packet_size){
   }
 }
 
-bool LSTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigned short current_time){
+bool LSTable::update_by_pong(unsigned short src_id, unsigned short cost, unsigned int current_time){
   bool update = false;
   LS_Entry* entry = check_linkst_contains(src_id);
 
@@ -283,7 +284,7 @@ void LSTable::delete_neighbor(unsigned short neighbor_id) {
     }
 
     table.erase(it);
-    free(vec);
+    delete vec;
   }
 }
 
