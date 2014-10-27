@@ -295,7 +295,6 @@ void RoutingProtocolImpl::send_ls_packet() {
   }
 
   ls_table.increase_seq();
-  ls_table.print_routing_table(routing_table);
 }
 
 void RoutingProtocolImpl::send_dv_packet() {

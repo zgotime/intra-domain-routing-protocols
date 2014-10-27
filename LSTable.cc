@@ -215,6 +215,8 @@ void LSTable::dijkstra(hash_map<unsigned short, unsigned short>& routing_table){
       }
     }
   }
+
+  print_routing_table(routing_table);
 }
 
 void LSTable::set_ls_packet(char* packet, unsigned short packet_size){
