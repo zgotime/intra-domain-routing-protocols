@@ -308,5 +308,5 @@ void RoutingProtocolImpl::send_dv_packet() {
     sys->send(port->port_id, packet, packet_size);
   }
 
-  dv_table.print_dv(routing_table);
+  // dv_table.print_dv(routing_table);
 }

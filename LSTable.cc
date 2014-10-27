@@ -95,19 +95,6 @@ void LSTable::update_by_ls(char* packet, unsigned int current_time, unsigned sho
     ls_vec->push_back(entry);
   }
 
-  cout << "*****************************" << endl;
-  cout << "Router ID: " << router_id << "received link state from Router " << source_id << ": "<< endl;
-  cout << "*****************************" << endl;
-  cout << "Destination ID\tnext hop" << endl;
-  cout << "*****************************" << endl;
-  cout << "ls_vec empty: " << ls_vec->empty() << endl;
-  cout << "ls vec size: " << ls_vec->size() << endl;
-  for (vector<LS_Entry*>::iterator iter = ls_vec->begin(); iter != ls_vec->end(); ++iter) {
-    cout << (*iter)->neighbor_id << "\t" << (*iter)->cost << endl;
-  }
-
-  cout << "*****************************" << endl;
-
   /* update time_to_expire */
   LS_Entry* neighbor_entry = check_linkst_contains(source_id);
 
@@ -218,7 +205,7 @@ void LSTable::dijkstra(hash_map<unsigned short, unsigned short>& routing_table){
     }
   }
 
-  print_routing_table(routing_table);
+  // print_routing_table(routing_table);
 }
 
 void LSTable::set_ls_packet(char* packet, unsigned short packet_size){
